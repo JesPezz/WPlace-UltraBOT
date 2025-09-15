@@ -327,6 +327,33 @@ async function purchaseProduct(cf_clearance, token, productId, amount) {
   });
 }
 
+async function purchaseColor(token, productId, amount, variant) {
+  const res = await fetch('http://localhost:3000/api/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      productId,
+      amount,
+      variant,
+      j: token
+    })
+  });
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error(`Invalid JSON from server: ${await res.text()}`);
+  }
+
+  if (!res.ok || !data || data.success !== true) {
+    throw new Error(
+      `Purchase failed. Status: ${res.status}, Error: ${data?.error}, Data: ${JSON.stringify(data)}`
+    );
+  }
+  return data;
+}
+
 function startServer(port, host) {
   const server = http.createServer((req, res) => {
     const parsed = url.parse(req.url, true);
@@ -778,7 +805,7 @@ function startServer(port, host) {
         if (body.pixelRight != null) updated.pixelRight = body.pixelRight;
         if (typeof body.active === 'boolean') updated.active = body.active;
         if (body.autobuy === null) { updated.autobuy = null; }
-        else if (body.autobuy === 'max' || body.autobuy === 'rec') { updated.autobuy = body.autobuy; }
+        else if (body.autobuy === 'max' || body.autobuy === 'rec' || body.autobuy === 'premium') { updated.autobuy = body.autobuy; }
         try {
           const cf = updated && typeof updated.cf_clearance === 'string' ? updated.cf_clearance : '';
           if (!cf || cf.length < 30) updated.active = false;
@@ -919,6 +946,36 @@ function startServer(port, host) {
                 } catch {}
               }
             } catch {}
+          }
+        }
+        else if (acct.autobuy === 'premium') {
+          const bitmap = acct.extraColorsBitmap || 0;
+          const owned = [];
+          for (let i = 0; i < 32; i++) {
+            if (bitmap & (1 << i)) owned.push(i + 32);
+          }
+          const missing = [];
+          for (let i = 0; i < 32; i++) {
+            if (!owned.includes(i + 32)) missing.push(i + 32);
+          }
+          
+          const price = 2000;
+          let droplets = Number(acct.droplets || 0);
+          const maxPurchases = Math.min(missing.length, Math.floor(droplets / price));
+          const productId = 100;
+          const qty = 1;
+          let total = 0;
+          
+          for (const colorId of missing) {
+            if (total >= maxPurchases) break;
+            try {
+              total++;
+              await purchaseColor(acct.token, productId, qty, colorId);
+              droplets -= price;
+              console.log('Purchased color', colorId, "for account", acct.name); // TODO: Remove
+            } catch (e) {
+              console.error('Purchase failed for', colorId, "for account", acct.name,"Error:", e); // TODO: Remove
+            }
           }
         }
         accounts[idx] = acct;

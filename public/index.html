@@ -961,6 +961,10 @@
               <div class="shop-desc" style="margin-top:8px;" data-i18n="shop.exclusive">Exclusive palette</div>
               <div id="shop-premium-palette" class="shop-palette-grid" aria-label="Premium color palette"></div>
               <div id="shop-premium-buy" class="shop-pill" role="button" tabindex="0" data-i18n="shop.buyPremium">💧 2000 Droplets</div>
+              <div class="shop-auto-wrap">
+                <span class="select-mode-label" data-i18n="shop.autoBuy">Auto-buy</span>
+                <button class="select-mode-track" id="shop-premium-auto" type="button" role="switch" aria-checked="false" aria-label="Auto-buy"><span class="select-mode-knob"></span></button>
+              </div>
             </div>
           </div>
         </div>
@@ -1929,6 +1933,7 @@
     const shopRecPriceEl = document.getElementById('shop-rec-price');
     const shopMaxAutoBtn = document.getElementById('shop-max-auto');
     const shopRecAutoBtn = document.getElementById('shop-rec-auto');
+    const shopPremiumAutoBtn = document.getElementById('shop-premium-auto');
     const shopPremiumPaletteWrap = document.getElementById('shop-premium-palette');
     const shopPremiumOwnedWrap = document.getElementById('shop-premium-owned');
     const shopPremiumBuyBtn = document.getElementById('shop-premium-buy');
@@ -5440,6 +5445,11 @@ function loadImage(area, no, preserveView = false) {
           shopRecAutoBtn.setAttribute('aria-checked', onRec ? 'true' : 'false');
           shopRecAutoBtn.classList.toggle('on', onRec);
         }
+        const onPremium = val === 'premium';
+        if (shopPremiumAutoBtn) {
+          shopPremiumAutoBtn.setAttribute('aria-checked', onPremium ? 'true' : 'false');
+          shopPremiumAutoBtn.classList.toggle('on', onPremium);
+        }
       } catch {}
     }
 
@@ -5464,6 +5474,8 @@ function loadImage(area, no, preserveView = false) {
     }
 
     // Wire buttons
+    if (shopPremiumAutoBtn) shopPremiumAutoBtn.addEventListener('click', () => toggleAutobuy('premium'));
+
     if (shopMaxDecBtn) shopMaxDecBtn.addEventListener('click', () => changeQty('max', -1));
     if (shopMaxIncBtn) shopMaxIncBtn.addEventListener('click', () => changeQty('max', +1));
     if (shopMaxMaxBtn) shopMaxMaxBtn.addEventListener('click', () => setMaxAffordable('max'));
