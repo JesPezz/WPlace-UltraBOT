@@ -959,22 +959,26 @@ function startServer(port, host) {
             if (!owned.includes(i + 32)) missing.push(i + 32);
           }
           
-          const price = 2000;
-          let droplets = Number(acct.droplets || 0);
-          const maxPurchases = Math.min(missing.length, Math.floor(droplets / price));
-          const productId = 100;
-          const qty = 1;
-          let total = 0;
-          
-          for (const colorId of missing) {
-            if (total >= maxPurchases) break;
-            try {
-              total++;
-              await purchaseColor(acct.token, productId, qty, colorId);
-              droplets -= price;
-              console.log('Purchased color', colorId, "for account", acct.name); // TODO: Remove
-            } catch (e) {
-              console.error('Purchase failed for', colorId, "for account", acct.name,"Error:", e); // TODO: Remove
+          if (missing.length === 0) {
+            acct.autobuy = "max";
+          } else {
+            const price = 2000;
+            let droplets = Number(acct.droplets || 0);
+            const maxPurchases = Math.min(missing.length, Math.floor(droplets / price));
+            const productId = 100;
+            const qty = 1;
+            let total = 0;
+            
+            for (const colorId of missing) {
+              if (total >= maxPurchases) break;
+              try {
+                total++;
+                await purchaseColor(acct.token, productId, qty, colorId);
+                droplets -= price;
+                console.log('Purchased color', colorId, "for account", acct.name); // TODO: Remove
+              } catch (e) {
+                console.error('Purchase failed for', colorId, "for account", acct.name,"Error:", e); // TODO: Remove
+              }
             }
           }
         }
